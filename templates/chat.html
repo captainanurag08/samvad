@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Samvad Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: hsl(197, 57%, 46%);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 200px;
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+    }
+    .sidebar h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar li {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+    }
+
+    /* Main Chat Area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #chat-box {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+      background: hsl(207, 51%, 65%);
+    }
+
+    .msg {
+      background: hwb(212 71% 5%);
+      margin: 8px 0;
+      padding: 10px 14px;
+      border-radius: 18px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+
+    .msg span {
+      font-weight: bold;
+      font-size: 14px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .msg small {
+      font-size: 11px;
+      color: #666;
+      display: block;
+      margin-top: 4px;
+    }
+
+    #typing {
+      font-style: italic;
+      color: oklab(18.02% -0.03083 0.00433);
+      margin: 4px 12px;
+      font-size: 13px;
+    }
+
+    /* Message bar (Instagram-like) */
+    #msgForm {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background: #fff;
+    }
+
+    #msgInput {
+      flex: 1;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 25px;
+      outline: none;
+      font-size: 15px;
+      background: #f0f2f5;
+      margin-right: 8px;
+    }
+
+    #msgForm button {
+      background: #0084ff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      padding: 12px 16px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #msgForm button:hover {
+      background: #006fd6;
+    }
+
+    /* File upload */
+    #fileForm {
+      padding: 8px 12px;
+      border-top: 1px solid #ddd;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h1>SAMVAD
+      
+    </h1><h2>Channels</h2>
+    <ul>
+    
+      <li>#chat</li>
+      <li>#support</li>
+      <li># info</li>
+    </ul>
+  </div>
+
+  <!-- Main Chat -->
+  <div class="main">
+    
+    <h2 style="margin:1px;">hello {{username}} ({{relation}})</h2>
+    <div id="online"></div>
+
+    <div id="chat-box">
+      {% for m in messages %}
+        <div class="msg">
+          <span>{{m.username}} ({{m.relation}}):</span>
+          {% if m.type == "text" %}
+            {{m.content}}
+          {% else %}
+            <img src="{{m.content}}" width="150" style="border-radius:8px;">
+          {% endif %}
+          <small>{{m.timestamp}}</small>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div id="typing"></div>
+
+    <!-- Message Form -->
+    <form id="msgForm">
+      <input id="msgInput" autocomplete="off" placeholder="Message...">
+      <button type="submit">➤</button>
+    </form>
+
+    <!-- File Upload -->
+    <form id="fileForm" enctype="multipart/form-data">
+      <input type="file" name="file">
+      <button>send photo</button>
+    </form>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const chatBox = document.getElementById("chat-box");
+
+    // Auto scroll
+    function scrollToBottom() {
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    scrollToBottom();
+
+    // Join room
+    socket.emit("join", {username: "{{username}}", relation: "{{relation}}"});
+
+    // New message listener
+    socket.on("new_message", msg => {
+      const div = document.createElement("div");
+      div.className = "msg";
+      if (msg.type === "text") {
+        div.innerHTML = `<span>${msg.username} (${msg.relation}):</span> ${msg.content} <small>${msg.timestamp}</small>`;
+      } else {
+        div.innerHTML = `<span>${msg.username} (${msg.relation}):</span> <img src="${msg.content}" width="150" style="border-radius:8px;"> <small>${msg.timestamp}</small>`;
+      }
+      chatBox.appendChild(div);
+      scrollToBottom();
+    });
+
+    // Online users
+    socket.on("online_list", users => {
+      document.getElementById("online").innerText =
+        "Online: " + users.map(u => u.username).join(", ");
+    });
+
+    // Typing indicator
+    socket.on("user_typing", d => {
+      document.getElementById("typing").innerText = d.username + " is typing...";
+      setTimeout(() => document.getElementById("typing").innerText = "", 1500);
+    });
+
+    // Send message
+    document.getElementById("msgForm").onsubmit = e => {
+      e.preventDefault();
+      const input = document.getElementById("msgInput");
+      if (input.value.trim() !== "") {
+        socket.emit("send_message", {content: input.value});
+        input.value = "";
+      }
+    };
+
+    // Typing event
+    document.getElementById("msgInput").addEventListener("input", () => {
+      socket.emit("typing", {});
+    });
+
+    // File upload
+    document.getElementById("fileForm").onsubmit = async e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      await fetch("/upload", {method:"POST", body:fd});
+      e.target.reset();
+    };
+  </script>
+</body>
+</html>

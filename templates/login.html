@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Samvad Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    /* Background and layout */
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: lch(60.05% 23 234.48);
+        color: hsl(284, 5%, 41%);
+    }
+
+    /* Login container */
+    .login-container {
+        background: #202225;
+        padding: 40px 30px;
+        border-radius: 15px;
+        width: 100%;
+        max-width: 380px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .login-container:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Title */
+    .login-container h1 {
+        font-size: 36px;
+        margin-bottom: 10px;
+        color: #ffffff;
+        text-shadow: 1px 1px 5px rgba(0,0,0,0.3);
+    }
+
+    .login-container h2 {
+        font-size: 18px;
+        color: #aaa;
+        margin-bottom: 30px;
+    }
+
+    /* Input fields */
+    .login-container input {
+        width: 100%;
+        padding: 14px;
+        margin: 10px 0;
+        border-radius: 10px;
+        border: none;
+        font-size: 14px;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    .login-container input:focus {
+        box-shadow: 0 0 10px #4A90E2;
+    }
+
+    /* Relationship buttons */
+    .relationship {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+    }
+
+    .relationship button {
+        flex: 1;
+        margin: 0 5px;
+        padding: 10px;
+        border: none;
+        border-radius: 10px;
+        background-color: #4A90E2;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .relationship button.active, .relationship button:hover {
+        background-color: #9013FE;
+    }
+
+    /* Submit button */
+    .login-container button.login-btn {
+        width: 100%;
+        padding: 14px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 10px;
+        background: lch(52.77% 33.08 189.15);
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .login-container button.login-btn:hover {
+        background: lch(62% 33.08 189.15);
+    }
+
+    /* Error message */
+    .error {
+        color: #FF6B6B;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+        .login-container {
+            padding: 30px 20px;
+        }
+        .login-container h1 {
+            font-size: 28px;
+        }
+        .login-container input {
+            padding: 12px;
+        }
+        .relationship button {
+            padding: 8px;
+            font-size: 14px;
+        }
+        .login-container button.login-btn {
+            padding: 12px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="login-container">
+    <h1>SAMVAD</h1>
+    <h3>Login to continue</h3>
+    
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <input type="text" name="username" placeholder="Your name" required>
+        <input type="password" name="password" placeholder="Password" required>
+
+        <div class="relationship">
+            <button type="button" id="friend-btn" class="active">Friend</button>
+            <button type="button" id="close-friend-btn">Close Friend</button>
+            <button type="button" id="family-btn">Family</button>
+        </div>
+
+        <input type="hidden" name="relation" id="relation" value="Friend">
+        <button type="submit" class="login-btn">Enter Chat</button>
+    </form>
+</div>
+
+<script>
+    const friendBtn = document.getElementById('friend-btn');
+    const closeFriendBtn = document.getElementById('close-friend-btn');
+    const familyBtn = document.getElementById('family-btn');
+    const relationInput = document.getElementById('relation');
+
+    function setActive(button, relation) {
+        [friendBtn, closeFriendBtn, familyBtn].forEach(b => b.classList.remove('active'));
+        button.classList.add('active');
+        relationInput.value = relation;
+    }
+
+    friendBtn.addEventListener('click', () => setActive(friendBtn, 'Friend'));
+    closeFriendBtn.addEventListener('click', () => setActive(closeFriendBtn, 'Close Friend'));
+    familyBtn.addEventListener('click', () => setActive(familyBtn, 'Family'));
+</script>
+
+</body>
+</html>
